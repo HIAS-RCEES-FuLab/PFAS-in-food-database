@@ -1,0 +1,534 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A PFAS Dataset Enabling Geographic and Temporal Analysis</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        body { 
+            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        a { text-decoration: none; color: inherit; }
+        h1, h2, h3, h4 { color: #007acc; margin: 0.5em 0; }
+
+        /* ========== 导航栏 ========== */
+        nav {
+            background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #007acc;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        nav .site-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ========== 内容区块 ========== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        section:hover {
+            transform: translateY(-5px);
+        }
+        .hero {
+            background: linear-gradient(135deg, #e8f4ff 0%, #d0e3ff 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0, 122, 204, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* ========== 按钮样式 ========== */
+        .button {
+            background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 122, 204, 0.2);
+        }
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 122, 204, 0.3);
+            background: linear-gradient(135deg, #005a9e 0%, #004a8c 100%);
+        }
+        .button-secondary {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+        .button-secondary:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        }
+
+        /* ========== 卡片样式 ========== */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        .card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #007acc;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            background: #e9ecef;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        .card h3 {
+            color: #005a9e;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h3::before {
+            content: "✅";
+            font-size: 18px;
+        }
+
+        /* ========== 功能列表 ========== */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #495057;
+        }
+        .feature-list li::before {
+            content: "✨";
+            font-size: 16px;
+            color: #007acc;
+        }
+
+        /* ========== 图片样式 ========== */
+        .data-flow-img {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ========== 页脚 ========== */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #e1e5eb;
+            background: #f8f9fa;
+            margin-top: 50px;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .social-links a {
+            color: #007acc;
+            transition: color 0.3s ease;
+        }
+        .social-links a:hover {
+            color: #005a9e;
+        }
+
+        /* ========== 响应式设计 ========== */
+        @media(max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            section {
+                padding: 25px;
+                margin-bottom: 20px;
+            }
+            nav {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            .nav-link {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            .card-container {
+                grid-template-columns: 1fr;
+            }
+            .button {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+
+        /* ========== 动画效果 ========== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        section, .card {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* ========== 统计数字 ========== */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007acc;
+            display: block;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon">PFAS</div>
+            <div class="site-title">PFAS data search & analysis</div>
+        </div>
+        <div class="nav-links">
+            <a href="#intro" class="nav-link active">🏠 Home</a>
+            <a href="#features" class="nav-link">✨ About</a>
+            <a href="#contact" class="nav-link">📞 Contact Us</a>
+            <a href="index2.html" class="button" style="padding: 8px 20px; margin: 0;">🚀 Get started</a>
+        </div>
+    </nav>
+
+    <!-- 主要内容容器 -->
+    <div class="container">
+
+        <!-- 首页简介 -->
+        <section id="intro" class="hero">
+            <h1>Welcome to the PFAS data search and analysis platform</h1>
+            <p style="font-size: 18px; color: #555; line-height: 1.6; max-width: 800px; margin: 20px auto;">
+                A dataset capable to support geographic and temporal analysis.
+            </p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="dataCount">112</span>
+                    <span class="stat-label">PFAS types</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">35045</span>
+                    <span class="stat-label">Aquatic samples</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">11634</span>
+                    <span class="stat-label">Terrestrial samples</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">29</span>
+                    <span class="stat-label">Large marine ecosystems</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">76</span>
+                    <span class="stat-label">Inner land waters</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">96</span>
+                    <span class="stat-label">Nations</span>
+                </div>
+            </div>
+
+            <button onclick="window.location.href='index2.html'" class="button">
+                <span>🚀</span> Begin search
+            </button>
+        </section>
+
+        <!-- 功能特性 -->
+        <section id="features">
+            <h2>✨ Data collection</h2>
+            <p style="color: #666; margin-bottom: 25px;">
+                Article reports for field measurement and dietary surveys were searched from “Web of Science”, “PubMed”, “ScienceDirect”, and “Taylor & Francis Online”. Statistic measures of the concentration of PFAS mixture or individual, including the means, mediums, standard deviations, minimum, maximum, number of samples, and time of sampling were scripted. The terrestrial food types were determined based on Food and Agriculture Organization of the United Nations (FAO) category, “Bovine Meat”, “Mutton & Goat Meat”, “Pigmeat”, “Poultry Meat”, “Meat, Other” (including edible offal, processed and cooked food), and “Eggs”. Those of aquatic food were categorized by “Meat, Aquatic Mammals”, “Aquatic Animals, Others”, “Mollusc”, “Crustacean”, “Freshwater fish” and “Marine fish”, of which “Marine fish” was further categorized into “Demersal”, “Pelagic”, and “Mix” (for both demersal and pelagic) to fit the FAO category. In addition, the processed fishery food would be categorized as “Cooked”, referring “Fish, Others” in FAO category. The categorization of fish was based on “FishBase” by searching its nick name or scientific name, if available in article, or based on the water types-lake, river, and ocean-of sampling sites. To ensure data quality, recovery and limit of measurement-limit of detection (LOD) and/or limit of quantification (LOQ) must be nominated in the article or its supplementary information. To confine the food type of gathering fitting our research scope-animal sourced food-we included only concentrations of aquatic animal muscle. The wild territorial animals were not included, unless they were hunted for food.
+            </p>
+
+            <div class="card-container">
+                <div class="card">
+                    <h3>Major discovery</h3>
+                    <ul class="feature-list">
+                        <li>Data span 1987~2023</li>
+                        <li>Top 7 frequently measured PFAS are PFOS, PFOA, PFNA, PFUnA, PFDeA, PFDoA, and PFHxS.</li>
+                        <li>Aquatic food, especially freshwater fishes, usually contain more PFAS than terrestrial food.</li>
+                        <li>PFAS concentration is generally reducing in aquatic food from 2000 to 2023.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Geographic pattern</h3>
+                    <ul class="feature-list">
+                        <li>PFAS in livestock meat is lower than that in aquatic food in all continents.</li>
+                        <li>Aquatic food from North America, Europe, and East Asia has more PFAS than those from South America, Oceania, and Africa.</li>
+                        <li>Fishes from inner land water contain more PFAS than that in fishes from pelagic ocean.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Time trend</h3>
+                    <ul class="feature-list">
+                        <li>PFAS in aquatic food was decreasing from 2000 to 2023, but not significantly changed in terrestrial food.</li>
+                        <li>There might be 3 stages of PFAS reduction in aquatic food: before 2010 (not change), 2011-2015 (fast reduction), and after 2016 (not change).</li>
+                        <li>PFOA in pelagic fishes from East Asia was increasing from 2015 to 2023.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 快速开始 -->
+        <section id="quick-start">
+            <h2>🚀 Get started</h2>
+            <p style="color: #666; margin-bottom: 25px;">
+                Start using the PFAS data search platform in just three simple steps:
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin: 30px 0;">
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center; position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #007acc; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</div>
+                    <div style="font-size: 36px; margin: 15px 0;">🌐</div>
+                    <h4 style="margin: 10px 0;">Open the platform</h4>
+                    <p style="color: #666; margin: 10px 0; font-size: 14px;">
+                        Click the “Get started” button in the top-right corner using your browser, and the system will automatically load the data.
+                    </p>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center; position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #007acc; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</div>
+                    <div style="font-size: 36px; margin: 15px 0;">🔍</div>
+                    <h4 style="margin: 10px 0;">Start search and analysis</h4>
+                    <p style="color: #666; margin: 10px 0; font-size: 14px;">
+                        Enter keywords and click “Search” to view the analysis results.
+                    </p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center; position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #007acc; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</div>
+                    <div style="font-size: 36px; margin: 15px 0;">📁</div>
+                    <h4 style="margin: 10px 0;">Export data</h4>
+                    <p style="color: #666; margin: 10px 0; font-size: 14px;">
+                        Choose your desired file format and export the current search results.
+                    </p>
+                </div>
+            </div>
+
+            <div style="background: #e7f3ff; padding: 20px; border-radius: 10px; margin-top: 25px; border-left: 4px solid #007acc;">
+                <h4 style="color: #007acc; margin-top: 0;">💡 Tips & tricks</h4>
+                <ul style="color: #555; line-height: 1.6;">
+                    <li>Use multiple keywords together to filter results more precisely.</li>
+                    <li>Click on table cells to view full content (hover tooltips available).</li>
+                    <li>Export filtered results for further analysis.</li>
+                    <li>The system automatically saves your search settings, so refreshing the page won't lose them.</li>
+                    <li>For the best experience, use Chrome or Edge browsers.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 联系区 -->
+        <section id="contact">
+            <h2>📞 Contact us</h2>
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                If you encounter any issues while using the platform, please feel free to contact us using the methods below.
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin: 30px 0;">
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 15px;">📧</div>
+                    <h4 style="margin: 10px 0;">Technical support</h4>
+                    <p style="color: #666; margin: 10px 0;">****@email.com</p>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 15px;">🐙</div>
+                    <h4 style="margin: 10px 0;">GitHub project</h4>
+                    <p style="color: #666; margin: 10px 0;">
+                        <a href="https://github.com/yezhihong1997" target="_blank" style="color: #007acc;">
+                            github.com/******
+                        </a>
+                    </p>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 36px; margin-bottom: 15px;">📚</div>
+                    <h4 style="margin: 10px 0;">Paper DOI</h4>
+                    <p style="color: #666; margin: 10px 0;">
+                        DOI of the paper (not available yet)
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <h3 style="color: #007acc;">Paper Title******</h3>
+            <p style="margin-top: 20px; font-size: 13px; color: #888;">
+                © 2026 PFAS Data Search | Last Updated: <span id="currentDate"></span> | 
+                <span id="versionInfo">Version 1.0.0</span>
+            </p>
+            <p style="font-size: 12px; color: #aaa; margin-top: 10px;">
+                This system is built entirely with front-end technologies, requiring no server support, ensuring security.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 更新当前日期
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('zh-CN');
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // 导航栏高亮
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 添加页面加载动画
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
